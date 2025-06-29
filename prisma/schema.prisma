@@ -17,8 +17,8 @@ model Cliente {
 
 model Filme {
   id         Int       @id @default(autoincrement())
-  modelo     String
-  marca      String
+  titulo     String
+  genero     String
   ano        Int
   disponivel Boolean   @default(true)
   reservas   Reserva[]

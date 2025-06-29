@@ -1,6 +1,6 @@
 import express from 'express';
 import clienteRouter from './routes/cliente';
-import veiculoRouter from './routes/filmes';
+import filmesRouter from './routes/filmes';
 import reservaRouter from './routes/reserva';
 import emailRouter from './routes/email';
 
@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 app.use('/clientes', clienteRouter);
-app.use('/veiculos', veiculoRouter);
+app.use('/filmes', filmesRouter);
 app.use('/reservas', reservaRouter);
 app.use('/email', emailRouter);
 

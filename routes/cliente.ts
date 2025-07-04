@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import {verificaToken} from "../middlewares/verificaToken";
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -45,7 +46,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verificaToken,async (req, res) => {
   const id = Number(req.params.id);
 
   try {

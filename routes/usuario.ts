@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
+import { verificaToken } from '../middlewares/verificaToken';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -81,7 +82,7 @@ router.post("/", async (req, res) => {
 });
 
 // Deletar usuário
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verificaToken, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -93,7 +94,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Atualizar usuário
-router.put("/:id", async (req, res) => {
+router.put("/:id", verificaToken, async (req, res) => {
     const { id } = req.params;
 
     const valida = usuarioSchema.safeParse(req.body);

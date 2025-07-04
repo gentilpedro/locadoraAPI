@@ -28,9 +28,8 @@ router.post('/:clienteId', async (req, res) => {
     }
 
     const reservas = cliente.reservas
-      .map((r) => `Reserva ID: ${r.id}, Veículo: ${r.filme.marca} ${r.filme.modelo}, de ${r.dataInicio.toDateString()} até ${r.dataFim.toDateString()}`)
+      .map((r) => `Reserva ID: ${r.id}, Filme: ${r.filme.titulo} ${r.filme.genero}, de ${r.dataInicio.toDateString()} até ${r.dataFim.toDateString()}`)
       .join('\n');
-
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,

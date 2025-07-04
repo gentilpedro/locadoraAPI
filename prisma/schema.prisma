@@ -44,3 +44,29 @@ model Pagamento {
 
   reserva Reserva @relation(fields: [reservaId], references: [id])
 }
+
+model Usuario {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  nome      String   @db.VarChar(50)
+  email     String   @unique @db.VarChar(100)
+  senha     String   @db.VarChar(60)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs Log[]
+
+  @@map("usuarios")
+}
+
+model Log {
+  id          Int      @id @default(autoincrement())
+  usuarioId   String   @db.VarChar(36)
+  descricao   String   @db.VarChar(60)
+  complemento String   @db.VarChar(200)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("logs")
+}

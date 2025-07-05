@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import { verificaToken } from '../middlewares/verificaToken';
+import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -73,12 +74,89 @@ router.post("/", async (req, res) => {
 
     try {
         const usuario = await prisma.usuario.create({
-            data: { nome, email, senha: hash },
+                data: { nome, email, senha: hash },
         });
         res.status(201).json(usuario);
     } catch (error) {
         res.status(400).json({ erro: "Erro ao criar usuário", detalhes: error });
     }
+});
+
+router.post('/solicitar-recuperacao', async (req, res) => {
+    const { email } = req.body;
+
+    const usuario = await prisma.usuario.findUnique({ where: { email } });
+    if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    // Gera código 4 dígitos
+    const codigo = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Atualiza usuário com código e validade (ex: 1 hora)
+    const agora = new Date();
+    const expiracao = new Date(agora.getTime() + 60 * 60 * 1000);
+
+    await prisma.usuario.update({
+        where: { email },
+        data: {
+            resetCode: codigo,
+            resetExpires: expiracao,
+        },
+    });
+
+    // Enviar e-mail (exemplo simples com nodemailer)
+    const transporter = nodemailer.createTransport({
+        // configure seu SMTP aqui
+        host: 'smtp.seuservidor.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: 'seu-email@dominio.com',
+            pass: 'sua-senha',
+        },
+    });
+
+    await transporter.sendMail({
+        from: '"Sistema" <no-reply@dominio.com>',
+        to: process.env.EMAIL_USER,
+        subject: 'Código de recuperação de senha',
+        text: `Seu código para recuperação é: ${codigo}`,
+    });
+
+    res.json({ message: 'Código enviado para seu e-mail' });
+});
+
+router.post('/resetar-senha', async (req, res) => {
+    const { email, codigo, novaSenha } = req.body;
+
+    const usuario = await prisma.usuario.findUnique({ where: { email } });
+    if (!usuario) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    if (!usuario.resetCode || !usuario.resetExpires) {
+        return res.status(400).json({ error: 'Nenhum código de recuperação ativo' });
+    }
+
+    const agora = new Date();
+    if (usuario.resetExpires < agora) {
+        return res.status(400).json({ error: 'Senha alterada com sucesso' });
+    }
+
+    if (usuario.resetCode !== codigo) {
+        return res.status(400).json({ error: 'Senha alterada com sucesso' });
+    }
+
+    // Criptografa a nova senha
+    const hash = await bcrypt.hash(novaSenha, 10);
+
+    await prisma.usuario.update({
+        where: { email },
+        data: {
+            senha: hash,
+            resetCode: null,
+            resetExpires: null,
+        },
+    });
+
+    res.json({ message: 'Senha alterada com sucesso' });
 });
 
 // Deletar usuário

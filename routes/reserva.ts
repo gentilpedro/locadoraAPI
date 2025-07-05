@@ -9,7 +9,7 @@ router.post('/', async (req, res) => {
 
   const filme = await prisma.filme.findUnique({ where: { id: filmeId } });
   if (!filme || !filme.disponivel) {
-    return res.status(400).json({ error: 'Veículo não disponível' });
+    return res.status(400).json({ error: 'Filme não disponível' });
   }
 
   const reserva = await prisma.$transaction(async (tx) => {
@@ -59,6 +59,41 @@ router.delete('/:id', async (req, res) => {
   });
 
   res.json({ message: 'Reserva excluída com sucesso' });
+});
+router.get('/', async (req, res) => {
+  try {
+    const reserva = await prisma.reserva.findMany();
+    res.json(reserva);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar reservas' });
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
+  try {
+    const reserva = await prisma.reserva.findUnique({
+      where: { id },
+      include: {
+        cliente: true,    // caso queira dados do cliente
+        filme: true,      // caso queira dados do filme
+        pagamento: true,  // para trazer os dados do pagamento relacionado
+      },
+    });
+
+    if (!reserva) {
+      return res.status(404).json({ error: 'Reserva não encontrada' });
+    }
+
+    res.json(reserva);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar reserva' });
+  }
 });
 
 export default router;
